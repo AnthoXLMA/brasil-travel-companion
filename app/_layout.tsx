@@ -6,13 +6,13 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 // Import du hook personnalisé ou directement de react-native
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useColorScheme } from '@/src/hooks/useColorScheme';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    SpaceMono: require('../src/assets/fonts/SpaceMono-Regular.ttf'),
   });
 
   if (!loaded) {
