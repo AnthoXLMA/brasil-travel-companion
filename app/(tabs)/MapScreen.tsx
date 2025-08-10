@@ -3,9 +3,12 @@ import { collection, getDocs } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { WebView } from "react-native-webview";
+import PlaceSearch from './PlaceSearch';
+
 
 export default function MapScreen() {
   const [places, setPlaces] = useState([]);
+  const [selectedPlace, setSelectedPlace] = useState<null | { name: string; location: { lat: number; lng: number } }>(null);
 
   // Charger les lieux depuis Firestore
   useEffect(() => {
@@ -17,7 +20,17 @@ export default function MapScreen() {
     loadPlaces();
   }, []);
 
-  // Générer le HTML pour Google Maps avec markers
+  // Handler pour place sélectionnée dans PlaceSearch (web)
+  const handlePlaceSelected = (place: { name: string; location: { lat: number; lng: number } }) => {
+    setSelectedPlace(place);
+    console.log("Place sélectionnée via recherche:", place);
+    // Ici tu peux aussi ajouter le lieu à Firestore ou modifier l’itinéraire
+  };
+
+  // Construire l’HTML Google Maps avec markers et centrer sur selectedPlace si défini
+  const center = selectedPlace ? selectedPlace.location : { lat: -22.971177, lng: -43.182543 };
+  const zoom = selectedPlace ? 15 : 12;
+
   const googleMapsHtml = `
     <!DOCTYPE html>
     <html>
@@ -40,28 +53,13 @@ export default function MapScreen() {
             z-index: 5;
           }
         </style>
-        <script src="https://maps.googleapis.com/maps/api/js?key=VOTRE_CLE_API&libraries=places"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDYZqWNGimH-pfDx1JRCShDCzlo7ORNtLk&libraries=places"></script>
         <script>
           function initMap() {
-            const center = { lat: -22.971177, lng: -43.182543 };
+            const center = { lat: ${center.lat}, lng: ${center.lng} };
             const map = new google.maps.Map(document.getElementById("map"), {
-              zoom: 12,
+              zoom: ${zoom},
               center: center,
-            });
-
-            const input = document.getElementById('pac-input');
-            const autocomplete = new google.maps.places.Autocomplete(input);
-            autocomplete.bindTo('bounds', map);
-
-            autocomplete.addListener('place_changed', () => {
-              const place = autocomplete.getPlace();
-              if (!place.geometry) return;
-              if (place.geometry.viewport) {
-                map.fitBounds(place.geometry.viewport);
-              } else {
-                map.setCenter(place.geometry.location);
-                map.setZoom(15);
-              }
             });
 
             const placesData = ${JSON.stringify(places)};
@@ -93,7 +91,6 @@ export default function MapScreen() {
         </script>
       </head>
       <body onload="initMap()">
-        <input id="pac-input" type="text" placeholder="Rechercher un lieu" />
         <div id="map"></div>
       </body>
     </html>
@@ -101,11 +98,15 @@ export default function MapScreen() {
 
   if (Platform.OS === "web") {
     return (
-      <iframe
-        src={`https://www.google.com/maps/embed/v1/view?key=AIzaSyAftVkhjlH0aiTg4ciiJJaGj3ogX77hOi0&center=-22.971177,-43.182543&zoom=12`}
-        style={{ flex: 1, width: "100%", height: "100vh", border: "none" }}
-        allowFullScreen
-      />
+      <div style={{ maxWidth: 600, margin: "auto", padding: 16 }}>
+        <PlaceSearch onPlaceSelected={handlePlaceSelected} />
+        <iframe
+          title="Google Map"
+          src={`https://www.google.com/maps/embed/v1/view?key=AIzaSyDYZqWNGimH-pfDx1JRCShDCzlo7ORNtLk&center=${center.lat},${center.lng}&zoom=${zoom}`}
+          style={{ width: "100%", height: "80vh", border: "none" }}
+          allowFullScreen
+        />
+      </div>
     );
   }
 
@@ -118,7 +119,7 @@ export default function MapScreen() {
           const data = JSON.parse(event.nativeEvent.data);
           if (data.action === "addToItinerary") {
             console.log("Lieu à ajouter :", data.placeId);
-            // Ici tu peux déclencher un ajout Firestore dans l'itinéraire du user
+            // Ajout Firestore ici
           }
         }}
       />
