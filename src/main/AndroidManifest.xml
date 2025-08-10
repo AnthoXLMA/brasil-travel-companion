@@ -1,0 +1,4 @@
+<!-- Permission d'accès à la localisation fine -->
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<!-- Permission d'accès à la localisation approximative -->
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
