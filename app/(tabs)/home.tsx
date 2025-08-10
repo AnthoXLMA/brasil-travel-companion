@@ -15,7 +15,7 @@ export default function Home() {
 
       <View style={styles.container}>
         <Text style={styles.title}>Brasil Travel Companion</Text>
-        <Text style={styles.subtitle}>La référence francophone pour l’organisation de voyages sur mesure au Brésil</Text>
+        <Text style={styles.subtitle}>Découvrez le Brésil avec Iguazur Réceptif</Text>
 
         <TouchableOpacity 
           style={styles.buttonPrimary} 
