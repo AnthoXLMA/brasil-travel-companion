@@ -1,33 +1,25 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import { AuthProvider, useAuth } from "@/src/context/AuthContext";
+import { Slot } from "expo-router";
+import { ActivityIndicator, View } from "react-native";
 
-import 'react-native-reanimated';
+function AuthGuard() {
+  const { user } = useAuth();
 
-// Import du hook personnalisé ou directement de react-native
-import { useColorScheme } from '@/src/hooks/useColorScheme';
-
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
-  const [loaded] = useFonts({
-    SpaceMono: require('../src/assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  if (!loaded) {
-    // Attendre le chargement des fonts avant d'afficher l'app
-    return null;
+  if (user === undefined) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
+  return user ? <Slot /> : <Slot initialRouteName="(auth)/login" />;
+}
+
+export default function RootLayout() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        {/* Cache le header sur le layout tabs */}
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <AuthProvider>
+      <AuthGuard />
+    </AuthProvider>
   );
 }
