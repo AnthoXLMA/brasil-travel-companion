@@ -24,10 +24,17 @@ export default function Home() {
           <Text style={styles.buttonText}>Explorer</Text>
         </TouchableOpacity>
 
+        {/* Nouveau bouton Carte */}
+        <TouchableOpacity 
+          style={[styles.buttonSecondary, { marginBottom: 30 }]} 
+          onPress={() => router.push('/MapScreen')}
+        >
+          <Text style={styles.buttonTextSecondary}>Voir la carte</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity 
           style={styles.buttonSecondary} 
           onPress={() => router.push('/(auth)/signup')}
-
         >
           <Text style={styles.buttonTextSecondary}>Créer un compte</Text>
         </TouchableOpacity>
