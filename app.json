@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "extra": {
       "googleMapsApiKey": "AIzaSyDYZqWNGimH-pfDx1JRCShDCzlo7ORNtLk"
-    },       <-- ici
+    },
     "ios": {
       "supportsTablet": true
     },

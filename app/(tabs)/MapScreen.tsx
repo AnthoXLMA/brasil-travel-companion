@@ -53,7 +53,7 @@ export default function MapScreen() {
           #map { height: 100vh; width: 100vw; margin: 0; padding: 0; }
           html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
         </style>
-        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDYZqWNGimH-pfDx1JRCShDCzlo7ORNtLk&libraries=places"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places"></script>
         <script>
           function initMap() {
             const center = { lat: ${center.lat}, lng: ${center.lng} };
@@ -99,7 +99,7 @@ export default function MapScreen() {
         <PlaceSearch onPlaceSelected={handlePlaceSelected} />
         <iframe
           title="Google Map"
-          src={`https://www.google.com/maps/embed/v1/view?key=TON_API_KEY&center=${center.lat},${center.lng}&zoom=${zoom}`}
+          src={`https://www.google.com/maps/embed/v1/view?key=GOOGLE_MAPS_API_KEY&center=${center.lat},${center.lng}&zoom=${zoom}`}
           style={{ width: "100%", height: "60vh", border: "none" }}
           allowFullScreen
         />
