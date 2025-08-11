@@ -1,35 +1,48 @@
 import { db } from "@/config/firebase";
+import { useRouter } from 'expo-router';
 import { collection, getDocs } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { WebView } from "react-native-webview";
 import PlaceSearch from './PlaceSearch';
+import RoutePlanner from './RoutePlanner';
 
+interface Place {
+  id?: string;
+  name: string;
+  description?: string;
+  lat: number;
+  lng: number;
+}
 
 export default function MapScreen() {
-  const [places, setPlaces] = useState([]);
-  const [selectedPlace, setSelectedPlace] = useState<null | { name: string; location: { lat: number; lng: number } }>(null);
+  const [places, setPlaces] = useState<Place[]>([]);
+  const [selectedPlace, setSelectedPlace] = useState<null | Place>(null);
+
+  const router = useRouter();
 
   // Charger les lieux depuis Firestore
   useEffect(() => {
     const loadPlaces = async () => {
       const snapshot = await getDocs(collection(db, "places"));
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as Omit<Place, 'id'>) }));
       setPlaces(data);
     };
     loadPlaces();
   }, []);
 
-  // Handler pour place sélectionnée dans PlaceSearch (web)
-  const handlePlaceSelected = (place: { name: string; location: { lat: number; lng: number } }) => {
+  const handlePlaceSelected = (place: Place) => {
     setSelectedPlace(place);
     console.log("Place sélectionnée via recherche:", place);
-    // Ici tu peux aussi ajouter le lieu à Firestore ou modifier l’itinéraire
   };
 
-  // Construire l’HTML Google Maps avec markers et centrer sur selectedPlace si défini
-  const center = selectedPlace ? selectedPlace.location : { lat: -22.971177, lng: -43.182543 };
+  const center = selectedPlace ? { lat: selectedPlace.lat, lng: selectedPlace.lng } : { lat: -22.971177, lng: -43.182543 };
   const zoom = selectedPlace ? 15 : 12;
+
+  const onConfirmTrip = (selectedPlaces: Place[]) => {
+    const tripData = encodeURIComponent(JSON.stringify(selectedPlaces));
+    router.push(`/tripDetail/[tripId]?data=${tripData}`);
+  };
 
   const googleMapsHtml = `
     <!DOCTYPE html>
@@ -39,19 +52,6 @@ export default function MapScreen() {
         <style>
           #map { height: 100vh; width: 100vw; margin: 0; padding: 0; }
           html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
-          #pac-input {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 300px;
-            padding: 8px 12px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            z-index: 5;
-          }
         </style>
         <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDYZqWNGimH-pfDx1JRCShDCzlo7ORNtLk&libraries=places"></script>
         <script>
@@ -74,18 +74,15 @@ export default function MapScreen() {
               const infoContent = \`
                 <div>
                   <h3>\${place.name}</h3>
-                  <p>\${place.description}</p>
-                  <button onclick="window.ReactNativeWebView.postMessage(JSON.stringify({ action: 'addToItinerary', placeId: '\${place.id}' }))">
+                  <p>\${place.description || ''}</p>
+                  <button onclick="window.ReactNativeWebView.postMessage(JSON.stringify({ action: 'addToItinerary', place: place }))">
                     Ajouter à l'itinéraire
                   </button>
                 </div>
               \`;
 
               const infoWindow = new google.maps.InfoWindow({ content: infoContent });
-
-              marker.addListener("click", () => {
-                infoWindow.open(map, marker);
-              });
+              marker.addListener("click", () => infoWindow.open(map, marker));
             });
           }
         </script>
@@ -98,14 +95,15 @@ export default function MapScreen() {
 
   if (Platform.OS === "web") {
     return (
-      <div style={{ maxWidth: 600, margin: "auto", padding: 16 }}>
+      <div style={{ maxWidth: 800, margin: "auto", padding: 16 }}>
         <PlaceSearch onPlaceSelected={handlePlaceSelected} />
         <iframe
           title="Google Map"
-          src={`https://www.google.com/maps/embed/v1/view?key=AIzaSyDYZqWNGimH-pfDx1JRCShDCzlo7ORNtLk&center=${center.lat},${center.lng}&zoom=${zoom}`}
-          style={{ width: "100%", height: "80vh", border: "none" }}
+          src={`https://www.google.com/maps/embed/v1/view?key=TON_API_KEY&center=${center.lat},${center.lng}&zoom=${zoom}`}
+          style={{ width: "100%", height: "60vh", border: "none" }}
           allowFullScreen
         />
+        <RoutePlanner onConfirmTrip={onConfirmTrip} />
       </div>
     );
   }
@@ -116,19 +114,22 @@ export default function MapScreen() {
         originWhitelist={["*"]}
         source={{ html: googleMapsHtml }}
         onMessage={(event) => {
-          const data = JSON.parse(event.nativeEvent.data);
-          if (data.action === "addToItinerary") {
-            console.log("Lieu à ajouter :", data.placeId);
-            // Ajout Firestore ici
+          try {
+            const data = JSON.parse(event.nativeEvent.data);
+            if (data.action === "addToItinerary") {
+              console.log("Lieu à ajouter :", data.place);
+              // Ici tu peux stocker en state pour RoutePlanner
+            }
+          } catch (err) {
+            console.error("Erreur parsing message WebView:", err);
           }
         }}
       />
+      <RoutePlanner onConfirmTrip={onConfirmTrip} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
 });

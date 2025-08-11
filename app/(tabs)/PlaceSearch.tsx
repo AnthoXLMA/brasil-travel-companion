@@ -36,7 +36,7 @@ export default function PlaceSearch({ onPlaceSelected }: { onPlaceSelected: (pla
       if (!inputRef.current) return;
       autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
         types: ["establishment", "geocode"],
-        componentRestrictions: { country: "fr" },
+        componentRestrictions: { country: "br" },
       });
       autocompleteRef.current.addListener("place_changed", () => {
         const place = autocompleteRef.current?.getPlace();
