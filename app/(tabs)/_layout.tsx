@@ -44,7 +44,7 @@ export default function TabLayout() {
         name="MapScreen"
         options={{
           title: 'Carte',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="map.fill" color={color} />,
         }}
       />
     </Tabs>
