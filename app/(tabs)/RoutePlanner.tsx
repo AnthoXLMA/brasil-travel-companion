@@ -1,8 +1,10 @@
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Alert, Button, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Button, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import MapView, { Marker, Polyline } from "react-native-maps";
 import PlaceSearch from "./PlaceSearch";
+
 
 interface Place {
   name: string;
@@ -22,7 +24,6 @@ export default function RoutePlanner() {
 
   const GOOGLE_MAPS_API_KEY = Constants.expoConfig?.extra?.googleMapsApiKey;
 
-  // Exemple d'appel Google Places
   const fetchAttractions = async (place: Place, index: number) => {
     try {
       const res = await fetch(
@@ -83,8 +84,43 @@ export default function RoutePlanner() {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Planificateur d’itinéraire</Text>
 
-      {/* Recherche de lieux */}
+      {/* Recherche */}
       <PlaceSearch onPlaceSelected={addPlace} />
+
+      {/* Carte */}
+      {selectedPlaces.length > 0 && (
+        <MapView
+          style={styles.map}
+          initialRegion={{
+            latitude: selectedPlaces[0].location.lat,
+            longitude: selectedPlaces[0].location.lng,
+            latitudeDelta: 0.1,
+            longitudeDelta: 0.1
+          }}
+        >
+          {selectedPlaces.map((place, i) => (
+            <Marker
+              key={i}
+              coordinate={{
+                latitude: place.location.lat,
+                longitude: place.location.lng
+              }}
+              title={place.name}
+            />
+          ))}
+
+          {selectedPlaces.length > 1 && (
+            <Polyline
+              coordinates={selectedPlaces.map((p) => ({
+                latitude: p.location.lat,
+                longitude: p.location.lng
+              }))}
+              strokeColor="#FF0000"
+              strokeWidth={3}
+            />
+          )}
+        </MapView>
+      )}
 
       {/* Liste des étapes */}
       {selectedPlaces.map((place, i) => (
@@ -106,7 +142,6 @@ export default function RoutePlanner() {
         </View>
       ))}
 
-      {/* Bouton valider */}
       <Button title="Valider le séjour" onPress={handleValidateTrip} />
     </ScrollView>
   );
@@ -115,6 +150,7 @@ export default function RoutePlanner() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
   title: { fontSize: 20, fontWeight: "bold", marginBottom: 16 },
+  map: { width: Dimensions.get("window").width - 32, height: 250, marginBottom: 20 },
   placeItem: { marginBottom: 20 },
   placeName: { fontSize: 16, fontWeight: "bold" },
   removeBtn: { color: "red", marginTop: 4 },
